@@ -1,0 +1,10 @@
+making template signal
+
+1) Manually extract rough clipping of strong signals from raw data.
+2) Average multiple signals to create a mean singal
+3) create a power spectrum (i.e. using the results of fft()).
+	- fft window? (frequency resolution...)
+4) create cumulative power spectral using the cumsum() function. e.g. if vector P is your power spectrum, then CP = cumsum(P) is the cumulative spectrum.
+5) normalize: e.g. NCP = CP / CP(end)
+6) plot versus frequency and look for the 0.9 level.
+7) 
