@@ -12,11 +12,11 @@ frequencies =[18000, 38000, 50000, 70000, 120000];
 bandpass_width = 2500;  % +- width of bandpass filter
 
 %%% Change to review single frequency, leave empty to review all
-freq = 120000;
+freq = 18000;
 %%%
 
 
-PATH2DETECTIONS = 'E:\BW_ECHO_EXPERIMENT\COC_2020_09\OUTPUT';
+PATH2DETECTIONS = 'E:\BW_ECHO_EXPERIMENT\COC_2020_09\OUTPUT3';
 PATH2DATA = 'E:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset';
 
 files = ['*',int2str(freq),'*.mat'];
@@ -34,7 +34,7 @@ end  %end detection.mat loop
 
 FileList = unique(FileList);
 
-for f = 116:length(FileList)%start filelist loop
+for f = 1:length(FileList)%start filelist loop
 
     wav = FileList(f);
     index = DetectionFiles(f);
@@ -47,13 +47,13 @@ for f = 116:length(FileList)%start filelist loop
     [M,q] = size(x); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
-    x = detrend(x); %remove mean from audio %%%
+    %x = detrend(x); %remove mean from audio %%% will reduce SNR..... frig
 
     plot_switch1 = 1; %turns test plots on (1) or off (0)
     if plot_switch1 == 1
         figure(1)
         plot(x) %plot entire audio wav with mean removed
-        title("Entire audio wav with mean removed")
+        title("Entire audio wav")
     end
     
     freq_bins = [freq-bandpass_width freq+bandpass_width]; %create frequency bands using frequencies and width of bandpass
@@ -82,28 +82,28 @@ for f = 116:length(FileList)%start filelist loop
     %load detections
     load(PATH2INDEX);
         
-    freq_detect_SNR.time = freq_detect_SNR.peak_index*dt;
+    peaks.time = peaks.peak_loc_freq*dt;
         
     if plot_switch1 == 1
        figure(2)
        subplot(2,1,1)
        hold on
-       plot(freq_detect_SNR.peak_index, max(abs(normalx_freq)*1.05), 'r^')
+       plot(peaks.peak_loc_freq, max(abs(normalx_freq)*1.05), 'r^')
        hold off
     end
     if plot_switch1 == 1
        figure(2)
        subplot(2,1,2)
        hold on
-       plot(freq_detect_SNR.time/60,freq/1000, 'r^')
+       plot(peaks.time/60,freq/1000, 'r^')
        hold off
     end
         
    start_ping = 0;
    end_ping = 0;
         
-   for d = 1:length(freq_detect_SNR.peak_index)
-       ping_loc = freq_detect_SNR.peak_index(d);
+   for d = 1:length(peaks.peak_index)
+       ping_loc = peaks.peak_index(d);
        ping_window = ping_loc - 5*Fs:ping_loc + 5*Fs-1;
        if ping_window(1) <=0 
           ping_window = 1: 10*Fs;
@@ -119,7 +119,7 @@ for f = 116:length(FileList)%start filelist loop
        [pM,pq] = size(normal_ping); %get size length of audio
        pt = dt*(start_ping:start_ping+pM-1)';
             
-       other_pings = freq_detect_SNR.peak_index(freq_detect_SNR.peak_index <= max(ping_window) & freq_detect_SNR.peak_index >= min(ping_window));
+       other_pings = peaks.peak_index(peaks.peak_index <= max(ping_window) & peaks.peak_index >= min(ping_window));
             
        figure(4)
        subplot(2,1,1)

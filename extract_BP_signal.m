@@ -1,7 +1,8 @@
 %Extract_signal.m
 %
-% First attempt at using LTSA logger times and matched filtering to extract EK-60 pings to make
-% standardized echo sounder ping detector
+% First attempt at using matched filtering to find EK-60 pings in acoustic
+% data
+
 tic
 clear
 close all
@@ -9,7 +10,7 @@ close all
 Fs = 256000;
 
 %N=1024;                 % sample length
-N=Fs;   %N = Fs pull of 1 seconds of data
+N=Fs;   %N = Fs pull 1 second of data
 N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000]; %ek60
 bandpass_width = 2500; % +- width of bandpass filter
@@ -20,16 +21,6 @@ fl1= 60;
 %set up Window
 window = 0.004; %seconds
 window_samps = window*Fs;
-
-% load logs
-%PATH2LOG = 'E:\BW_ECHO_EXPERIMENT\COC_2020_09\COC_2020_09_echo_log.csv';
-%log = readtable(PATH2LOG);
-
-%REMOVE FOR FUTURE USE
-%Cludge to fix data directory restructure
-%log.InputFile = strrep(log.InputFile,"D:","E:");
-%log.InputFile = strrep(log.InputFile,"_ECHOSOUNDER_","_ECHO_");
-%END CLUDGE
 
 %load audio file
 %PATHfileList = log.InputFile;
@@ -54,14 +45,16 @@ else
     w = 0;
     restart = 0;
 end
-%load mean ping
-P = audioread('E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\Mean_Ping\MEAN_PING.wav'); %ek60 ping
+%load template mean ping
+P = audioread('INPUT\COC\Mean_Ping\MEAN_PING.wav'); %ek60 ping
 %P = audioread('E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\Mean_Ping\18kHzPing.wav'); %ek60 ping pure 18kHz sine
 %P = audioread('D:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\AMAR538_STRONG_PING_TEMPLATE_1.wav');    %this in a main beam ping
 %P = audioread('E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\AMAR538_REFLECTED_PING_TEMPLATE_1.wav'); %this in a reflected ping
-[MP, MPI] = max(P);
+[MP, MPI] = max(abs(P)); %get maximum amplitude  
+%Clean up template duration to match window size
 PT_window = MPI - ceil(window_samps/2):MPI + ceil(window_samps/2)-1;
-PW = P(PT_window); 
+PW = P(PT_window);
+
 b = conj(PW(end:-1:1)); %inverse conjugate of the normalized ping all frequencies
 
 %uniqueFileList = unique(PATHfileList);%get filelist from preliminary LTSA
@@ -88,7 +81,7 @@ for f = 1:length(PATHfileList)%start filelist loop
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
     %x = highpass(x,100,Fs); %takes too long...
-    x = detrend(x); %remove mean from audio %%% takes a long time 21 seconds per file
+    %x = detrend(x); %remove mean from audio %%% takes a long time 21 seconds per file
     
     plot_switch1 = 0; %turns test plots on (1) or off (0)
       
@@ -225,7 +218,7 @@ for f = 1:length(PATHfileList)%start filelist loop
                pathSegment = PATH2WAV(slashIdx(end)+1:end);
                file_n = split(pathSegment,'.');
                new_table = ['match_table_freq_' num2str(frequencies(freq)) '_' char(file_n(1)) '.' char(file_n(2)) '.mat'];
-               Path2Output = [PATH2WAV(1:slashIdx(end-1)) 'OUTPUT2\'];
+               Path2Output = [PATH2WAV(1:slashIdx(end-1)) 'OUTPUT3\'];
                if ~exist(Path2Output, 'dir')  
                   mkdir(Path2Output);
                end
