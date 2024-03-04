@@ -81,7 +81,8 @@ for f = 1:length(PATHfileList)%start filelist loop
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
     %x = highpass(x,100,Fs); %takes too long...
-    %x = detrend(x); %remove mean from audio %%% takes a long time 21 seconds per file
+    %x = detrend(x); %remove mean from audio %%% takes a long time 21
+    %seconds per file. I think this was dumb...
     
     plot_switch1 = 0; %turns test plots on (1) or off (0)
       
@@ -186,8 +187,10 @@ for f = 1:length(PATHfileList)%start filelist loop
             Freqindex95 = find(cum_FreqPing == FreqPing95);
             Freqindex05 = find(cum_FreqPing == FreqPing05);
             FreqPing90_window = [Freqindex05+min(ping_window_freq):Freqindex95+min(ping_window_freq)];
+            Start90 = Freqindex05+min(ping_window_freq);
+            Stop90 = Freqindex95+min(ping_window_freq);
             FreqPing90 = y2(FreqPing90_window);
-            
+                       
             Freqrms90 = rms(FreqPing90);
             peaks.FreqRMS90(n) = Freqrms90;
             Freqdur90 = length(FreqPing90)/Fs;

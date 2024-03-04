@@ -11,6 +11,8 @@ N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000];
 bandpass_width = 2500;  % +- width of bandpass filter
 
+SNR_THRESHOLD = 10;
+
 %%% Change to review single frequency, leave empty to review all
 freq = 18000;
 %%%
@@ -81,6 +83,7 @@ for f = 1:length(FileList)%start filelist loop
     
     %load detections
     load(PATH2INDEX);
+    peaks = peaks(peaks.FreqSNR2>SNR_THRESHOLD,:);
         
     peaks.time = peaks.peak_loc_freq*dt;
         
@@ -101,9 +104,12 @@ for f = 1:length(FileList)%start filelist loop
         
    start_ping = 0;
    end_ping = 0;
+   
+   peaks.main = zeros(size(peaks.peak_loc_freq));
+   peaks.ref = zeros(size(peaks.peak_loc_freq));
         
-   for d = 1:length(peaks.peak_index)
-       ping_loc = peaks.peak_index(d);
+   for d = 1:length(peaks.peak_loc_freq)
+       ping_loc = peaks.peak_loc_freq(d);
        ping_window = ping_loc - 5*Fs:ping_loc + 5*Fs-1;
        if ping_window(1) <=0 
           ping_window = 1: 10*Fs;
@@ -119,7 +125,7 @@ for f = 1:length(FileList)%start filelist loop
        [pM,pq] = size(normal_ping); %get size length of audio
        pt = dt*(start_ping:start_ping+pM-1)';
             
-       other_pings = peaks.peak_index(peaks.peak_index <= max(ping_window) & peaks.peak_index >= min(ping_window));
+       other_pings = peaks.peak_loc_freq(peaks.peak_loc_freq <= max(ping_window) & peaks.peak_loc_freq >= min(ping_window));
             
        figure(4)
        subplot(2,1,1)
@@ -133,8 +139,17 @@ for f = 1:length(FileList)%start filelist loop
        spectrogram(normal_ping,16384*2,512,[],Fs,'yaxis')
        colorbar off
        ylim(freq_bins/1000)
-           
-       pause()
+       p_types = [1 2 0];
+       ping_type = input("1: main beam ping, 2: possible reflection, 0: other");
+       while ~ismember(ping_type,p_types)
+       disp("Invalid input")
+       ping_type = input("1: main beam ping, 2: possible reflection, 0: other");
+       end
+       if ping_type == 1
+           peaks.main(d) = 1;
+       elseif ping_type == 2
+           peaks.ref(d) = 1;
+       end
        clf(4)
        clear other_pings ping ping_window
    end %end ping list
