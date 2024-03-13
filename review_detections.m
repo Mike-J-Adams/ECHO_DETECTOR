@@ -11,14 +11,15 @@ N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000];
 bandpass_width = 2500;  % +- width of bandpass filter
 
-SNR_THRESHOLD = 10;
+SNR_THRESHOLD = 30;
+Ping_Duration = [0.001 0.05];
 
 %%% Change to review single frequency, leave empty to review all
 freq = 18000;
 %%%
 
 
-PATH2DETECTIONS = 'E:\BW_ECHO_EXPERIMENT\COC_2020_09\OUTPUT3';
+PATH2DETECTIONS = 'E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\OUTPUT\COC_2020_09\3DAY_SUBSET';
 PATH2DATA = 'E:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset';
 
 files = ['*',int2str(freq),'*.mat'];
@@ -37,18 +38,28 @@ end  %end detection.mat loop
 FileList = unique(FileList);
 
 for f = 1:length(FileList)%start filelist loop
-
+  
     wav = FileList(f);
     index = DetectionFiles(f);
     PATH2WAV = char(fullfile(PATH2DATA,wav));
     PATH2INDEX = char(fullfile(PATH2DETECTIONS,index));
+    disp(PATH2WAV);
+    disp(PATH2INDEX);    
+         %load detections
+    load(PATH2INDEX);
+    peaks = peaks(peaks.FreqSNR2>=SNR_THRESHOLD & peaks.FreqDUR90>=Ping_Duration(1) & peaks.FreqDUR90<=Ping_Duration(2) ,:);
+    if isempty(peaks)
+        continue
+    end
+    
+    
     dt_start = readDateTime(PATH2WAV); %start time of file, read in from filename
     [x] = audioread(PATH2WAV); %read in wav file 
-    disp(PATH2WAV);
-    disp(PATH2INDEX);
+
     [M,q] = size(x); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
+    peaks.time = peaks.peak_loc_freq*dt;
     %x = detrend(x); %remove mean from audio %%% will reduce SNR..... frig
 
     plot_switch1 = 1; %turns test plots on (1) or off (0)
@@ -80,12 +91,6 @@ for f = 1:length(FileList)%start filelist loop
        colorbar off
        ylim(freq_bins/1000)
     end
-    
-    %load detections
-    load(PATH2INDEX);
-    peaks = peaks(peaks.FreqSNR2>SNR_THRESHOLD,:);
-        
-    peaks.time = peaks.peak_loc_freq*dt;
         
     if plot_switch1 == 1
        figure(2)
@@ -136,9 +141,9 @@ for f = 1:length(FileList)%start filelist loop
        hold off
        xlim([min(pt) max(pt)])
        subplot(2,1,2)
-       spectrogram(normal_ping,16384*2,512,[],Fs,'yaxis')
+       spectrogram(normal_ping,512,512/2,[],Fs,'yaxis')
        colorbar off
-       ylim(freq_bins/1000)
+       ylim((freq_bins+2500)/1000)
        p_types = [1 2 0];
        ping_type = input("1: main beam ping, 2: possible reflection, 0: other");
        while ~ismember(ping_type,p_types)
