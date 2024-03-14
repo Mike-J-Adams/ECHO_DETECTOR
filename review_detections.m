@@ -9,7 +9,7 @@ Fs = 256000;
 N=Fs*2;                 %N = Fs pull of 2 second of data
 N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000];
-bandpass_width = 2500;  % +- width of bandpass filter
+bandpass_width = 5000;  % +- width of bandpass filter
 
 SNR_THRESHOLD = 30;
 Ping_Duration = [0.001 0.05];
@@ -143,7 +143,7 @@ for f = 1:length(FileList)%start filelist loop
        subplot(2,1,2)
        spectrogram(normal_ping,512,512/2,[],Fs,'yaxis')
        colorbar off
-       ylim((freq_bins+2500)/1000)
+       ylim((freq_bins)/1000)
        p_types = [1 2 0];
        ping_type = input("1: main beam ping, 2: possible reflection, 0: other");
        while ~ismember(ping_type,p_types)
