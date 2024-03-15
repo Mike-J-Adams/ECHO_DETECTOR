@@ -15,7 +15,7 @@ SNR_THRESHOLD = 30;
 Ping_Duration = [0.001 0.05];
 
 %%% Change to review single frequency, leave empty to review all
-freq = 18000;
+freq = 120000;
 %%%
 
 
