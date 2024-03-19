@@ -31,7 +31,7 @@ PATHfileList = dir(PATH2DATA);
 %restart logic
 PATH2OUTPUT = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\OUTPUT2"; 
 
-[iStart] = restart_logic(PATH2OUTPUT,PATH2DATA);
+[iStart] = utilities.restart_logic(PATH2OUTPUT,PATH2DATA);
 
 %load template mean ping
 P = audioread('E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\Mean_Ping\MEAN_PING.wav'); %ek60 ping
@@ -58,6 +58,9 @@ for f = iStart:length(PATHfileList)%start filelist loop
     %x = detrend(x); %remove mean from audio %%% takes a long time 21
     %seconds per file. I think this was dumb...
     
+    %%% create empty variable to store bandpass filter object
+    bandpass_filter = [];
+    
     plot_switch1 = 0; %turns test plots on (1) or off (0)
       
     for freq = 1:length(frequencies) %Start frequency loop
@@ -66,7 +69,6 @@ for f = iStart:length(PATHfileList)%start filelist loop
         %%%% Think about bandpass more...
         x_BP = bandpass(x,freq_bins,Fs); %bandpass to isolate each frequency
         %%%%
-        
         Ms = max(x_BP); %gets maximum from bandpassed audio
         if Ms >= .95
             disp("WARNING: Audio saturated")
