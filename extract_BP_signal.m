@@ -24,29 +24,17 @@ window_samps = window*Fs;
 
 %load audio file
 %PATHfileList = log.InputFile;
-%PATH2Data = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset\*.wav"; %ek60 all files
-PATH2Data = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\strong_pings_subset\*.wav"; %bigelow around
-PATHfileList = dir(PATH2Data);
+PATH2DATA = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset\"; %ek60 all files
+%PATH2Data = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\strong_pings_subset\*.wav"; %bigelow around
+PATHfileList = dir(PATH2DATA);
 
 %restart logic
-PATH2OUTPUT = ''; %leave blank if this is the first time running script
-outcheck = dir([PATH2OUTPUT '\*freq*.mat']);
+PATH2OUTPUT = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\OUTPUT2"; 
 
-if ~isempty(PATH2OUTPUT)
-lastoutputtime = readDateTime(outcheck(end).name);
-restart = 1;
-    for w = 1:length(PATHfileList)
-        fileList_date = readDateTime(PATHfileList(w).name);
-        if fileList_date == lastoutputtime
-           break 
-        end
-    end
-else
-    w = 0;
-    restart = 0;
-end
+[iStart] = restart_logic(PATH2OUTPUT,PATH2DATA);
+
 %load template mean ping
-P = audioread('INPUT\COC\Mean_Ping\MEAN_PING.wav'); %ek60 ping
+P = audioread('E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\Mean_Ping\MEAN_PING.wav'); %ek60 ping
 %P = audioread('E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\Mean_Ping\18kHzPing.wav'); %ek60 ping pure 18kHz sine
 %P = audioread('D:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\AMAR538_STRONG_PING_TEMPLATE_1.wav');    %this in a main beam ping
 %P = audioread('E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\INPUT\COC\AMAR538_REFLECTED_PING_TEMPLATE_1.wav'); %this in a reflected ping
@@ -54,27 +42,13 @@ P = audioread('INPUT\COC\Mean_Ping\MEAN_PING.wav'); %ek60 ping
 %Clean up template duration to match window size
 PT_window = MPI - ceil(window_samps/2):MPI + ceil(window_samps/2)-1;
 PW = P(PT_window);
-
 b = conj(PW(end:-1:1)); %inverse conjugate of the normalized ping all frequencies
 
-%uniqueFileList = unique(PATHfileList);%get filelist from preliminary LTSA
 %analysis
-for f = 1:length(PATHfileList)%start filelist loop
+for f = iStart:length(PATHfileList)%start filelist loop
     
-    if restart == 1
-       f = w;
-       restart = 0;
-    else
-       f = w+1;
-       w = f; %this fix will cause error out add line to 
-    end
-    if f > length(PATHfileList)
-        disp('done')
-        return
-    end
-    %PATH2WAV = char(uniqueFileList(f));
     PATH2WAV = [PATHfileList(f).folder, '\', PATHfileList(f).name];
-    dt_start = readDateTime(PATH2WAV); %start time of file, read in from filename
+    dt_start = utilities.readDateTime(PATH2WAV); %start time of file, read in from filename
     [x] = audioread(PATH2WAV); %read in wav file 
     disp(PATH2WAV);
     [M,q] = size(x); %get size length of audio
