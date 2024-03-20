@@ -15,6 +15,7 @@ N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000]; %ek60
 bandpass_width = 2500; % +- width of bandpass filter
 
+
 SNR_threshold = 10;
 fl1= 60;
 
@@ -27,10 +28,10 @@ window_samps = window*Fs;
 PATH2DATA = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset\"; %ek60 all files
 %PATH2Data = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\strong_pings_subset\*.wav"; %bigelow around
 PATHfileList = dir(PATH2DATA);
-
-%restart logic
 PATH2OUTPUT = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\OUTPUT2"; 
 
+
+%restart logic
 [iStart] = utilities.restart_logic(PATH2OUTPUT,PATH2DATA);
 
 %load template mean ping
@@ -44,6 +45,10 @@ PT_window = MPI - ceil(window_samps/2):MPI + ceil(window_samps/2)-1;
 PW = P(PT_window);
 b = conj(PW(end:-1:1)); %inverse conjugate of the normalized ping all frequencies
 
+%%% create empty variable to store bandpass filter object
+bandpass_filter = [];
+filterFreq = [];
+
 %analysis
 for f = iStart:length(PATHfileList)%start filelist loop
     
@@ -53,28 +58,47 @@ for f = iStart:length(PATHfileList)%start filelist loop
     disp(PATH2WAV);
     [M,q] = size(x); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
-    t = dt*(0:M-1)';%get time index in seconds
-    %x = highpass(x,100,Fs); %takes too long...
-    %x = detrend(x); %remove mean from audio %%% takes a long time 21
-    %seconds per file. I think this was dumb...
-    
-    %%% create empty variable to store bandpass filter object
-    bandpass_filter = [];
+    t = dt*(0:M-1)';%get time index in seconds   
     
     plot_switch1 = 0; %turns test plots on (1) or off (0)
       
     for freq = 1:length(frequencies) %Start frequency loop
     %for freq = 1
-        freq_bins = [frequencies(freq)-bandpass_width frequencies(freq)+bandpass_width]; %create frequency bands using frequencies and width of bandpass
+    
+        LowerStopbandFrequency = frequencies(freq) - bandpass_width-1000;
+        LowerPassbandFrequency = frequencies(freq) - bandpass_width;
+        UpperPassbandFrequency = frequencies(freq) + bandpass_width;
+        UpperStopbandFrequency = frequencies(freq) + bandpass_width+1000;
+        
+        %freq_bins = [frequencies(freq)-bandpass_width frequencies(freq)+bandpass_width]; %create frequency bands using frequencies and width of bandpass
         %%%% Think about bandpass more...
-        x_BP = bandpass(x,freq_bins,Fs); %bandpass to isolate each frequency
+        %x_BP1 = bandpass(x,freq_bins,Fs); %bandpass to isolate each frequency
+        %%% create bandpass filter object if it doesn't exist already
+        if isempty(bandpass_filter) || frequencies(freq) ~= filterFreq
+           filterFreq = frequencies(freq);
+           bandpass_filter = designfilt(...
+                 'bandpassfir',...
+                 'StopbandFrequency1', LowerStopbandFrequency,...
+                 'PassbandFrequency1', LowerPassbandFrequency,...
+                 'PassbandFrequency2', UpperPassbandFrequency,...
+                 'StopbandFrequency2', UpperStopbandFrequency,...
+                 'StopbandAttenuation1', 60,...
+                 'StopbandAttenuation2', 60,...
+                 'PassbandRipple', 1,...
+                 'DesignMethod', 'kaiserwin',...
+                 'SampleRate', Fs...
+                 );
+        end 
         %%%%
+        x_BP = bandpass.noDelayFilt(bandpass_filter, x);
+        
         Ms = max(x_BP); %gets maximum from bandpassed audio
         if Ms >= .95
             disp("WARNING: Audio saturated")
         end
         normalx = x_BP/Ms(1); %normalize bandpassed audio %needed?
-        P_freq = bandpass(PW,freq_bins,Fs); %bandpass signal (echosounder ping)
+        %P_freq = bandpass(PW,freq_bins,Fs); %bandpass signal (echosounder ping)
+        P_freq = bandpass.noDelayFilt(bandpass_filter,PW); %bandpass signal (echosounder ping)
         MP_freq = max(P_freq); %maximum from template echosounder ping
         normalP_freq = P_freq/MP_freq; %normalize signal
     
