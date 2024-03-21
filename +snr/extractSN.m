@@ -13,7 +13,7 @@ function [xSignal, xNoise] = extractSN(x, fs, sigStart, sigStop, noiseDist, clip
 %   -- add noise range as an output argument (in samples)
 
     
-    import snr.noDelayFilt
+    import bandpass.noDelayFilt
 
     % get sigStart, sigStop, and noiseDist as samples, based on "units"
     switch units
