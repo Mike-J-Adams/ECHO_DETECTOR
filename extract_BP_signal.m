@@ -10,7 +10,7 @@ close all
 %Set sample rate of recordings
 Fs = 256000;
 
-N=Fs;   %N = Fs pull 1 second of data
+N=Fs*3;   %N = Fs pull 1 second of data %%% currently set at 3 seconds
 
 % set frequencies of interest
 frequencies =[18000, 38000, 50000, 70000, 120000]; %ek60
@@ -18,15 +18,18 @@ frequencies =[18000, 38000, 50000, 70000, 120000]; %ek60
 bandpass_width = 2500; 
 
 %set up sample extraction window
-window = 0.004; %seconds
+window = 0.003; %seconds
 window_samps = window*Fs;
 
 %Set path to .wav files
 PATH2DATA = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset\"; %ek60 all files
 %PATH2Data = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\strong_pings_subset\*.wav"; %bigelow around
-PATHfileList = dir(PATH2DATA);
+PATHfileList = dir(fullfile(PATH2DATA,"*.wav"));
 %Set path to output
 PATH2OUTPUT = "E:\BW_ECHO_EXPERIMENT\COC_2020_09\OUTPUT2"; 
+
+%turns debugging plots on (1) or off (0)
+plot_switch1 = 0; 
 
 %restart logic
 [iStart] = utilities.restart_logic(PATH2OUTPUT,PATH2DATA);
@@ -61,10 +64,7 @@ for f = iStart:length(PATHfileList)%start filelist loop
     dt = 1/Fs;
     %get time index in seconds
     t = dt*(0:M-1)';  
-    
-    %turns debugging plots on (1) or off (0)
-    plot_switch1 = 1; 
-      
+
     for freq = 1:length(frequencies) %Start frequency loop
     %for freq = 1
         %define stop and pass bands for bandpass filter
@@ -180,6 +180,10 @@ for f = iStart:length(PATHfileList)%start filelist loop
             
             [FreqPing90, Freqnoise90] = snr.extractSN(x, Fs, RelativeStart90, RelativeStop90, 1024, 512, bandpass_filter, 'samples');
             [snr_dB, snr_adjusted_dB] = snr.calculateSNR(FreqPing90, Freqnoise90);
+            if isempty(snr_dB)
+                snr_dB = NaN;
+                snr_adjusted_dB = NaN;
+            end
             
             Freqrms90 = rms(FreqPing90);
             peaks.FreqRMS90(n) = Freqrms90;
@@ -199,19 +203,19 @@ for f = iStart:length(PATHfileList)%start filelist loop
             if plot_switch1 == 1
                 figure(5)
                 subplot(2,1,1);
-                plot(FreqPing90) %plot matched filtered audio 
+                plot(FreqPing90)  
                 title("Ping90")
                 subplot(2,1,2);
                 plot(Freqnoise90) %plot match filtered audio
                 title("Noise sample90")
             end
         end   %end peak loop         
-                                    
+              % Save detection output!                      
                slashIdx = strfind(PATH2WAV, '\'); 
                pathSegment = PATH2WAV(slashIdx(end)+1:end);
                file_n = split(pathSegment,'.');
                new_table = ['match_table_freq_' num2str(frequencies(freq)) '_' char(file_n(1)) '.' char(file_n(2)) '.mat'];
-               Path2Output = [PATH2WAV(1:slashIdx(end-1)) 'OUTPUT3\'];
+               Path2Output = [PATH2WAV(1:slashIdx(end-1)) 'OUTPUT2\'];
                if ~exist(Path2Output, 'dir')  
                   mkdir(Path2Output);
                end
@@ -224,6 +228,6 @@ for f = iStart:length(PATHfileList)%start filelist loop
    end%end freq loop
 end   %end filelist loop
 
-% click length ~0.002s
+
 
 toc
