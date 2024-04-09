@@ -4,6 +4,8 @@
 clear
 close all
 
+import('utilities.readDateTime');
+
 Fs = 256000;
 %N=1024;                % sample length
 N=Fs*2;                 %N = Fs pull of 2 second of data
@@ -145,10 +147,12 @@ for f = 1:length(FileList)%start filelist loop
        colorbar off
        ylim((freq_bins)/1000)
        p_types = [1 2 0];
-       ping_type = input("1: main beam ping, 2: possible reflection, 0: other");
+       disp("1: main beam ping, 2: possible reflection, 0: other: ");
+       ping_type = input();
        while ~ismember(ping_type,p_types)
        disp("Invalid input")
-       ping_type = input("1: main beam ping, 2: possible reflection, 0: other");
+       disp("1: main beam ping, 2: possible reflection, 0: other: ");
+       ping_type = input();
        end
        if ping_type == 1
            peaks.main(d) = 1;
@@ -157,6 +161,7 @@ for f = 1:length(FileList)%start filelist loop
        end
        clf(4)
        clear other_pings ping ping_window
+       
    end %end ping list
 end                             %end filelist loop
 
