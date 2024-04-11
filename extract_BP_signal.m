@@ -7,6 +7,9 @@ tic
 clear
 close all
 
+%set channel
+channel = 1;
+%set sample rate
 Fs = 256000;
 
 %N=1024;                 % sample length
@@ -15,7 +18,7 @@ N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000]; %ek60
 bandpass_width = 2500; % +- width of bandpass filter
 
-SNR_threshold = 10;
+SNR_threshold = 10; %not used, remove in future
 fl1= 60;
 
 %set up Window
@@ -78,6 +81,9 @@ for f = 1:length(PATHfileList)%start filelist loop
     [x] = audioread(PATH2WAV); %read in wav file 
     disp(PATH2WAV);
     [M,q] = size(x); %get size length of audio
+    if q > 1
+        x = x(:,channel);
+    end
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
     %x = highpass(x,100,Fs); %takes too long...
