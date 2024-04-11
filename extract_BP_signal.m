@@ -7,7 +7,11 @@ tic
 clear
 close all
 
-%Set sample rate of recordings
+
+%set channel
+channel = 1;
+%set sample rate
+
 Fs = 256000;
 
 N=Fs*3;   %N = Fs pull 1 second of data %%% currently set at 3 seconds
@@ -58,12 +62,18 @@ for f = iStart:length(PATHfileList)%start filelist loop
     %read in wav file
     [x] = audioread(PATH2WAV);  
     disp(PATH2WAV);
-    %get size length of audio
-    [M,q] = size(x);
-    %time between samples in seconds
-    dt = 1/Fs;
-    %get time index in seconds
-    t = dt*(0:M-1)';  
+
+    [M,q] = size(x); %get size length of audio
+    if q > 1
+        x = x(:,channel);
+    end
+    dt = 1/Fs;      %time between samples in seconds
+    t = dt*(0:M-1)';%get time index in seconds
+    %x = highpass(x,100,Fs); %takes too long...
+    %x = detrend(x); %remove mean from audio %%% takes a long time 21
+    %seconds per file. I think this was dumb...
+    
+    plot_switch1 = 0; %turns test plots on (1) or off (0)
 
     for freq = 1:length(frequencies) %Start frequency loop
     %for freq = 1
