@@ -135,7 +135,7 @@ for f = iStart:length(PATHfileList)%start filelist loop
         %approximate energy by squaring amplitude
         y2_2 = y2.^2;
         
-        % Find peaks in squared matched filter response greater than 1 second apart 
+        % Find peaks in squared matched filter response greater than 3 second apart 
         [Peak_val_freq, peak_loc_freq] = findpeaks(y2_2,'MinPeakDistance',N);
         %potentially split script here for ease of use...
  

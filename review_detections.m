@@ -13,7 +13,7 @@ N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000];
 bandpass_width = 5000;  % +- width of bandpass filter
 
-SNR_THRESHOLD = 30;
+SNR_THRESHOLD = 5;
 Ping_Duration = [0.001 0.05];
 
 %%% Change to review single frequency, leave empty to review all
@@ -21,8 +21,8 @@ freq = 120000;
 %%%
 
 
-PATH2DETECTIONS = 'E:\BW_ECHO_EXPERIMENT\MATLAB\ECHO_DETECT\OUTPUT\COC_2020_09\3DAY_SUBSET';
-PATH2DATA = 'E:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset';
+PATH2DETECTIONS = 'E:\BW_ECHO_EXPERIMENT\GBK_2020_09\ECHO_DETECTOR_OUTPUT\OUTPUT2';
+PATH2DATA = 'E:\BW_ECHO_EXPERIMENT\GBK_2020_09\3DaySubset';
 
 files = ['*',int2str(freq),'*.mat'];
 DetectionList = dir(fullfile(PATH2DETECTIONS,files));
@@ -38,6 +38,10 @@ for f = 1:length(DetectionList) %start detection.mat loop
 end  %end detection.mat loop
 
 FileList = unique(FileList);
+
+%%% create empty variable to store bandpass filter object
+bandpass_filter = [];
+filterFreq = [];
 
 for f = 1:length(FileList)%start filelist loop
   
@@ -56,7 +60,7 @@ for f = 1:length(FileList)%start filelist loop
     
     
     dt_start = readDateTime(PATH2WAV); %start time of file, read in from filename
-    [x] = audioread(PATH2WAV); %read in wav file 
+    [x] = audioread(PATH2WAV,'native'); %read in wav file 
 
     [M,q] = size(x); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
@@ -71,43 +75,64 @@ for f = 1:length(FileList)%start filelist loop
         title("Entire audio wav")
     end
     
-    freq_bins = [freq-bandpass_width freq+bandpass_width]; %create frequency bands using frequencies and width of bandpass
-    x_freq = bandpass(x,freq_bins,Fs); %bandpass to isolate each frequency
-    Ms = max(abs(x_freq)); %gets maximum from bandpassed audio
-    if Ms >= .95
+   LowerStopbandFrequency = freq - bandpass_width-1000;
+   LowerPassbandFrequency = freq - bandpass_width;
+   UpperPassbandFrequency = freq + bandpass_width;
+   UpperStopbandFrequency = freq + bandpass_width+1000;
+        
+   %%% create bandpass filter object if it doesn't exist already
+   if isempty(bandpass_filter) || freq ~= filterFreq
+      filterFreq = freq;
+      bandpass_filter = designfilt(...
+                 'bandpassfir',...
+                 'StopbandFrequency1', LowerStopbandFrequency,...
+                 'PassbandFrequency1', LowerPassbandFrequency,...
+                 'PassbandFrequency2', UpperPassbandFrequency,...
+                 'StopbandFrequency2', UpperStopbandFrequency,...
+                 'StopbandAttenuation1', 60,...
+                 'StopbandAttenuation2', 60,...
+                 'PassbandRipple', 1,...
+                 'DesignMethod', 'kaiserwin',...
+                 'SampleRate', Fs...
+                 );
+   end 
+   %Bandpass data
+   x_freq = bandpass.noDelayFilt(bandpass_filter, x);
+   Ms = max(abs(x_freq)); %gets maximum from bandpassed audio
+   if Ms >= .95
        disp("WARNING: Audio saturated")
-    end
-    normalx_freq = x_freq/Ms(1); %normalize bandpassed audio %needed?
+   end
+   normalx_freq = x_freq/Ms(1); %normalize bandpassed audio %needed?
         
-    if plot_switch1 == 1
-       figure(2)
-       subplot(2,1,1)
-       plot(normalx_freq) %plot bandpassed audio wav with mean removed and normalized to max
-       title("Bandpassed audio wav")
-    end
+   if plot_switch1 == 1
+      figure(2)
+      subplot(2,1,1)
+      plot(normalx_freq) %plot bandpassed audio wav with mean removed and normalized to max
+      title("Bandpassed audio wav")
+   end
         
-    if plot_switch1 == 1
-       figure(2)
-       subplot(2,1,2)
-       spectrogram(x_freq,16384*2,512,[],Fs,'yaxis')
-       colorbar off
-       ylim(freq_bins/1000)
-    end
+   if plot_switch1 == 1
+      figure(2)
+      subplot(2,1,2)
+      spectrogram(x_freq,16384*2,512,[],Fs,'yaxis')
+      colorbar off
+      ylim(freq_bins/1000)
+   end
         
-    if plot_switch1 == 1
-       figure(2)
-       subplot(2,1,1)
-       hold on
-       plot(peaks.peak_loc_freq, max(abs(normalx_freq)*1.05), 'r^')
-       hold off
-    end
-    if plot_switch1 == 1
-       figure(2)
-       subplot(2,1,2)
-       hold on
-       plot(peaks.time/60,freq/1000, 'r^')
-       hold off
-    end
+   if plot_switch1 == 1
+      figure(2)
+      subplot(2,1,1)
+      hold on
+      plot(peaks.peak_loc_freq, max(abs(normalx_freq)*1.05), 'r^')
+      hold off
+   end
+   if plot_switch1 == 1
+      figure(2)
+      subplot(2,1,2)
+      hold on
+      plot(peaks.time/60,freq/1000, 'r^')
+      hold off
+   end
         
    start_ping = 0;
    end_ping = 0;
