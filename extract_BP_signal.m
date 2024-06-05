@@ -10,6 +10,7 @@ close all
 
 %set channel
 channel = 1;
+
 %set sample rate
 
 Fs = 256000;
@@ -139,9 +140,6 @@ for f = iStart:length(PATHfileList)%start filelist loop
         [Peak_val_freq, peak_loc_freq] = findpeaks(y2_2,'MinPeakDistance',N);
         %potentially split script here for ease of use...
  
-        
-        
-        
         %initialize storage containers
         peaks = table(peak_loc_freq, Peak_val_freq);
         peaks.retained = zeros(size(peak_loc_freq));
