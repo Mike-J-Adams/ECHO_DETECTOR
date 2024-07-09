@@ -16,16 +16,21 @@ frequencies =[18000, 38000, 50000, 70000, 120000];
 bandpass_width = 5000;  % +- width of bandpass filter
 
 SNR_THRESHOLD = 6;
-Ping_Duration = [0.001 0.002];
+Ping_Duration = [0.001 0.0025];
 
 %%% Change to review single frequency, leave empty to review all
 freq = 18000;
 %%%
 
-
-PATH2DETECTIONS = 'D:\BW_ECHO_EXPERIMENT\COC_2020_09\COC_EK60_DETECTIONS_ALL.mat';
+PATH2OUTPUT = 'D:\BW_ECHO_EXPERIMENT\COC_2020_09';
+output_name = 'COC_EK60_DETECTIONS_FILTERED_VALIDATED.mat';
+PATH2DETECTIONS = 'D:\BW_ECHO_EXPERIMENT\COC_2020_09\COC_EK60_DETECTIONS_FILTERED_VALIDATED.mat';
 PATH2DATA = 'D:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset';
-load(PATH2DETECTIONS)
+load(PATH2DETECTIONS);
+
+if exist('Filtered_PEAKS')
+    PEAKS = Filtered_PEAKS;
+end
 
 %%% create empty variable to store bandpass filter object
 bandpass_filter = [];
@@ -34,8 +39,14 @@ filterFreq = [];
 Filtered_PEAKS = PEAKS(PEAKS.FreqSNR2>=SNR_THRESHOLD & PEAKS.FreqDUR90>=Ping_Duration(1) & PEAKS.FreqDUR90<=Ping_Duration(2) & PEAKS.freq == num2str(freq) ,:);
 Filtered_PEAKS.WavFiles = strrep(Filtered_PEAKS.file,'.mat','.wav');
 unique_wav = unique(Filtered_PEAKS.WavFiles);
-
-
+if ~ismember('validated', Filtered_PEAKS.Properties.VariableNames)
+    Filtered_PEAKS.validated = zeros(size(Filtered_PEAKS,1),1);
+end
+if ~ismember('reviewed', Filtered_PEAKS.Properties.VariableNames)
+    Filtered_PEAKS.reviewed = zeros(size(Filtered_PEAKS,1),1);
+else
+    Filtered_PEAKS = Filtered_PEAKS(Filtered_PEAKS.reviewed == 0,:);
+end
 
 for d = 1:length(unique_wav) %detection loop
     file = unique_wav(d);
@@ -111,31 +122,50 @@ for d = 1:length(unique_wav) %detection loop
    for ping = 1:height(Filtered_peaks_wav)
        ping_loc = Filtered_peaks_wav.peak_loc_freq(ping);
        ping_samps = Filtered_peaks_wav.FreqSAMPS90(ping);
-       buffer = 256;
+       buffer = 512;
        ping_start_stop = [ping_loc-ceil(ping_samps/2), ping_loc + ceil(ping_samps/2)];
+       ping_loc_clip = ceil((ping_samps/2)+1+buffer);
        ping_clip = [ping_start_stop(1)-buffer, ping_start_stop(2)+buffer];
-       ping_x_clip = x_freq(ping_clip(1):ping_clip(2)); 
+       ping_x_clip = x_freq(ping_clip(1):ping_clip(2));
+       
         if plot_switch1 == 1
             figure(2)
             subplot(2,1,1)
             hold on
-            plot(ping_loc,freq/1000,'*r')
+            plot(ping_loc,max(x_freq),'*r')
             hold off
             figure(3)
             subplot(2,1,1)
             plot(ping_x_clip) %plot bandpassed audio wav with mean removed
             title("Bandpassed ping")
+            hold on
+            plot(ping_loc_clip,max(ping_x_clip),'*r')
+            hold off
         end
         
         if plot_switch1 == 1
             figure(3)
             subplot(2,1,2)
-            spectrogram(ping_x_clip,256,128,[],Fs,'yaxis')
+            spectrogram(ping_x_clip,64,32,[],Fs,'yaxis')
             colorbar off
             ylim([LowerStopbandFrequency/1000 UpperStopbandFrequency/1000])
         end
-   end
+        disp(' ')
+        disp(file)
+        ui = input('Enter 1 to validated ping, any other key to continue:','s');
+        if ui == '1'
+            Filtered_PEAKS.validated(ping) = 1;
+            Filtered_PEAKS.reviewed(ping) = 1;
+        elseif ui == 's'
+        save(fullfile(PATH2OUTPUT,output_name), "Filtered_PEAKS")
+        else
+            Filtered_PEAKS.reviewed(ping) = 1;
+            continue
+        end
+        
+   end  % end ping loop
    
 end                             %end filelist loop
 
+save(fullfile(PATH2OUTPUT,output_name), "Filtered_PEAKS")
 
