@@ -6,7 +6,6 @@ close all
 
 import('utilities.readDateTime');
 
-
 plot_switch1 = 1; %turns test plots on (1) or off (0)
 Fs = 256000;
 %N=1024;                % sample length
@@ -15,27 +14,27 @@ N2=N/2;                 % step size = 50% overlap .5 seconds
 frequencies =[18000, 38000, 50000, 70000, 120000];
 bandpass_width = 5000;  % +- width of bandpass filter
 
-SNR_THRESHOLD = 0;
+SNR_THRESHOLD = 3;
 Ping_Duration = [0.001 0.0025];
 
 %%% Change to filter to Datetime Range
-FilterDateTime = datetime(['2021/08/04 03:48'; '2021/08/04 09:07'],'Format','yyyy/MM/dd HH:mm'); %COC
-%FilterDateTime = datetime(['2021/08/04 03:48'; '2021/08/04 09:07'],'Format','yyyy/MM/dd HH:mm'); %FCH
-%FilterDateTime = datetime(['2021/08/04 03:48'; '2021/08/04 09:07'],'Format','yyyy/MM/dd HH:mm'); %GBK
+%FilterDateTime = datetime(['2021/08/04 03:48'; '2021/08/04 09:07'],'Format','yyyy/MM/dd HH:mm'); %COC
+FilterDateTime = datetime(['2021/08/04 08:22'; '2021/08/04 14:17'],'Format','yyyy/MM/dd HH:mm'); %GBK
+%FilterDateTime = datetime(['2021/08/04 19:28'; '2021/08/05 01:02'],'Format','yyyy/MM/dd HH:mm'); %FCH
 %%%
 
 %%% Change to review single frequency, leave empty to review all
 freq = 18000;
 %%%
 
-PATH2OUTPUT = 'F:\BW_ECHO_EXPERIMENT\COC_2020_09';
-output_name = 'COC_EK60_DETECTIONS_FILTERED_18kHz_VALIDATED.mat';
-PATH2DETECTIONS = 'F:\BW_ECHO_EXPERIMENT\COC_2020_09\COC_EK60_DETECTIONS_ALL.mat';
-PATH2DATA = 'F:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset';
+PATH2OUTPUT = 'F:\BW_ECHO_EXPERIMENT\GBK_2020_09';
+output_name = 'GBK_EK60_DETECTIONS_FILTERED_18kHz_VALIDATED.mat';
+PATH2DETECTIONS = 'F:\BW_ECHO_EXPERIMENT\GBK_2020_09\GBK_EK60_DETECTIONS_ALL.mat';
+PATH2DATA = 'F:\BW_ECHO_EXPERIMENT\GBK_2020_09\3DaySubset';
 load(PATH2DETECTIONS);
 
-if exist('Filtered_PEAKS','var')
-    PEAKS = Filtered_PEAKS;
+if isfile(fullfile(PATH2OUTPUT,output_name))
+   load(fullfile(PATH2OUTPUT,output_name)); 
 end
 
 %%% create empty variable to store bandpass filter object
@@ -52,23 +51,22 @@ Filtered_PEAKS = PEAKS(PEAKS.FreqSNR2 >= SNR_THRESHOLD & ...
     ,:);
 Filtered_PEAKS.WavFiles = strrep(Filtered_PEAKS.file,'.mat','.wav');
 unique_wav = unique(Filtered_PEAKS.WavFiles);
-%if ~ismember('validated', Filtered_PEAKS.Properties.VariableNames)
-%    Filtered_PEAKS.validated = zeros(size(Filtered_PEAKS,1),1);
-%end
-%if ~ismember('reviewed', Filtered_PEAKS.Properties.VariableNames)
-%    Filtered_PEAKS.reviewed = zeros(size(Filtered_PEAKS,1),1);
-%else
-%    Filtered_PEAKS = Filtered_PEAKS(Filtered_PEAKS.reviewed == 0,:);
-%end
-Filtered_peaks_wav_reviewed = [];
 
+if ~exist('Filtered_peaks_wav_reviewed','var')
+    Filtered_peaks_wav_reviewed = [];
+    f = 1;
+else
+    last_file = Filtered_peaks_wav_reviewed.WavFiles(end);
+    f = find(unique_wav == last_file);
+end
 
-for d = 1:length(unique_wav) %detection loop
+for d = f:length(unique_wav) %detection loop
     file = unique_wav(d);
     dt_start = readDateTime(char((unique_wav(d)))); %start time of file, read in from filename
     PATH2WAV = fullfile(PATH2DATA,char((unique_wav(d))));
     [x] = audioread(PATH2WAV);%read in wav file
     [X] = audioread(PATH2WAV, 'native');
+    X_adjusted = X/256;
     p = utilities.amar2dB(X,5,-164);
     
     [M,q] = size(x); %get size length of audio
@@ -133,6 +131,17 @@ for d = 1:length(unique_wav) %detection loop
    end
    
    Filtered_peaks_wav = Filtered_PEAKS(Filtered_PEAKS.WavFiles == file,:);
+   if ~isempty(Filtered_peaks_wav_reviewed)
+   Filtered_peaks_reviewed_wav = Filtered_peaks_wav_reviewed(Filtered_peaks_wav_reviewed.WavFiles == file,:);
+   else
+   Filtered_peaks_reviewed_wav = table([]);  
+   end
+   %FIX HERE
+   if height(Filtered_peaks_wav) == height(Filtered_peaks_reviewed_wav)
+       continue
+   else
+       last_ping = height(Filtered_peaks_reviewed_wav)+1;
+   end
    
    if ~ismember('validated', Filtered_peaks_wav.Properties.VariableNames)
        Filtered_peaks_wav.validated = zeros(size(Filtered_peaks_wav,1),1);
@@ -146,7 +155,8 @@ for d = 1:length(unique_wav) %detection loop
    Filtered_peaks_wav.adjusted_ping_loc = NaN(height(Filtered_peaks_wav),1);
    
    
-   for ping = 1:height(Filtered_peaks_wav)
+   
+   for ping = last_ping:height(Filtered_peaks_wav)
        ping_loc = Filtered_peaks_wav.peak_loc_freq(ping);
        ping_samps = Filtered_peaks_wav.FreqSAMPS90(ping);
        buffer = 512;
