@@ -32,7 +32,7 @@ for p = 1:height(Validated_ranges)
     end
     [x,Fs] = audioread(file,[window_start,window_stop-1],'native');
     x = double(x); %still don't understand this one...
-    x1=x/256;
+    x1=x/256; %or this one...
     [M,q] = size(x1); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
