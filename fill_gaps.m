@@ -1,7 +1,6 @@
 %fill_gaps.m
 
-%review_detections.m
-% Review detection and assign 1 or 0 to mask out bad detections
+%fill gaps in detections
 
 clear
 close all
