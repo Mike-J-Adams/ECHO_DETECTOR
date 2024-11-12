@@ -18,11 +18,11 @@ HydrophoneSensitivity = -165.42; %C00044
 bandpass_filter = [];
 filterFreq = [];
 
-for p = 1:height(Validated_ranges)
-    ping_index = Validated_ranges.adjusted_ping_loc(p);
-    file = char(fullfile(PATH2WAV,Validated_ranges.WavFiles(p)));
+for p = 1:height(Validated_ranges) % loop through pings
+    ping_index = Validated_ranges.adjusted_ping_loc(p); % get index of ping peak
+    file = char(fullfile(PATH2WAV,Validated_ranges.WavFiles(p))); % get wav file 
     ainfo = audioinfo(file);
-    window_start = ping_index - ping_window;
+    window_start = ping_index - ping_window; % define window to extract ping
     if window_start <= 0
         window_start = 1;
     end
@@ -30,14 +30,15 @@ for p = 1:height(Validated_ranges)
     if window_stop > ainfo.TotalSamples
         window_stop = ainfo.TotalSamples;
     end
-    [x,Fs] = audioread(file,[window_start,window_stop-1],'native');
+    [x,Fs] = audioread(file,[window_start,window_stop-1],'native'); %read in just ping in native
     x = double(x); %still don't understand this one...
     x1=x/256; %or this one...
     [M,q] = size(x1); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
     
-    freq = double(Validated_ranges.freq(p));
+    freq = double(Validated_ranges.freq(p)); % get frequency of detected ping
+    %define bandpass filter
     LowerStopbandFrequency = freq - bandpass_width-1000;
     LowerPassbandFrequency = freq - bandpass_width;
     UpperPassbandFrequency = freq + bandpass_width;
@@ -57,9 +58,9 @@ for p = 1:height(Validated_ranges)
     %             ); 
    %Bandpass data
    %x_freq = bandpass.noDelayFilt(bandpass_filter, x1);
-   x_freq = bandpass(x1,[LowerPassbandFrequency,UpperPassbandFrequency],Fs);
+   x_freq = bandpass(x1,[LowerPassbandFrequency,UpperPassbandFrequency],Fs); %bandpass filter
    trim = 256;
-   x_freq_trimmed = x_freq(trim:length(x_freq)-trim); 
+   x_freq_trimmed = x_freq(trim:length(x_freq)-trim); %tring away buffer
    
    figure(1)
    subplot(2,1,1)
@@ -67,9 +68,9 @@ for p = 1:height(Validated_ranges)
    subplot(2,1,2)
    plot(x_freq_trimmed)
    
-   noise = x_freq_trimmed(1:512);
+   noise = x_freq_trimmed(1:512); %select out noise
    
-   [Start90, Stop90] = utilities.calcEng(x_freq_trimmed, 90);
+   [Start90, Stop90] = utilities.calcEng(x_freq_trimmed, 90); %mark 90% energy 
    hold on
    xline(Start90,'r')
    xline(Stop90,'r')
@@ -87,13 +88,13 @@ for p = 1:height(Validated_ranges)
     
     xMax = max(xSub);
     xMin = min(xSub);
-    ppCount = xMax - xMin;
+    ppCount = xMax - xMin; %get peak to peak in AMAR counts
     Validated_ranges.ppCount(p) = ppCount;
     
-    Validated_ranges_p = (ppCount*(9/2^24))/(5*(10^(HydrophoneSensitivity/20)));
+    Validated_ranges_p = (ppCount*(9/2^24))/(5*(10^(HydrophoneSensitivity/20))); %convert counts to pressure
  
     
     % convert to dB
-    Validated_ranges.ppSignal(p) = 20*log10(Validated_ranges_p);
+    Validated_ranges.ppSignal(p) = 20*log10(Validated_ranges_p); %convert pressure to dB
            
 end    
