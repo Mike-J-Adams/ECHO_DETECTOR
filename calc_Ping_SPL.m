@@ -3,15 +3,15 @@
 clear
 close all
 %%%%%%%
-PATH2WAV = "F:\BW_ECHO_EXPERIMENT\COC_2020_09\3DaySubset";
+PATH2WAV = "F:\BW_ECHO_EXPERIMENT\GBK_2020_09\3DaySubset";
 bandpass_width = 5000;
 ping_window = 2048;
 %%%%%%%
 
 %load validated pings
-load('COC_EK60_VALIDATED_RANGES.mat')
-HydrophoneSensitivity = -165.42; %C00044
-%HydrophoneSensitivity = -165.42; %D000893
+load('GBK_EK60_VALIDATED_RANGES.mat')
+%HydrophoneSensitivity = -165.42; %C00044
+HydrophoneSensitivity = -165.42; %D000893
 %HydrophoneSensitivity = -164.271; %F00099
 
 %%% create empty variable to store bandpass filter object
@@ -31,7 +31,7 @@ for p = 1:height(Validated_ranges) % loop through pings
         window_stop = ainfo.TotalSamples;
     end
     [x,Fs] = audioread(file,[window_start,window_stop-1],'native'); %read in just ping in native
-    x = double(x); %still don't understand this one...
+    x = double(x(:,1)); %still don't understand this one...
     x1=x/256; %or this one...
     [M,q] = size(x1); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds

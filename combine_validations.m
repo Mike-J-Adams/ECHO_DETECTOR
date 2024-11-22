@@ -6,7 +6,7 @@ close all
 import('utilities.readDateTime');
 
 %set path to data
-PATH2VALIDATIONS = 'F:\BW_ECHO_EXPERIMENT\COC_2020_09\';
+PATH2VALIDATIONS = 'F:\BW_ECHO_EXPERIMENT\FCH_2020_09\';
 
 files = '*_VALIDATED.mat';
 VALIDATEDList = dir(fullfile(PATH2VALIDATIONS,files));
@@ -25,6 +25,6 @@ for f = 1:length(VALIDATEDFiles)%start filelist loop
    VALIDATED_PINGS = [VALIDATED_PINGS;Filtered_peaks_wav_reviewed];
 end
 
-output_name = 'COC_EK60_VALIDATED_ALL.mat';
+output_name = 'FCH_EK60_VALIDATED_ALL.mat';
 
 save(fullfile(PATH2VALIDATIONS,output_name), "VALIDATED_PINGS")
