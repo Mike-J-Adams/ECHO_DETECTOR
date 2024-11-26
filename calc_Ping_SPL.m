@@ -3,13 +3,17 @@
 clear
 close all
 %%%%%%%
-PATH2WAV = "F:\BW_ECHO_EXPERIMENT\GBK_2020_09\3DaySubset";
+PATH2WAV = "F:\BW_ECHO_EXPERIMENT\";
 bandpass_width = 5000;
 ping_window = 2048;
 %%%%%%%
 
 %load validated pings
-load('GBK_EK60_VALIDATED_RANGES.mat')
+load('ALL_SITES_PINGS.mat')
+
+%load hydrophone values
+AMARINPUT = readtable("C:\Users\Adamsmi\Documents\MATLAB\GITHUB\ECHO_DETECTOR\INPUT\AMAR_INPUT.csv");
+
 %HydrophoneSensitivity = -165.42; %C00044
 HydrophoneSensitivity = -165.42; %D000893
 %HydrophoneSensitivity = -164.271; %F00099
