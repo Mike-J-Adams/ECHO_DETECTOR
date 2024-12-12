@@ -4,28 +4,36 @@ clear
 close all
 %%%%%%%
 PATH2WAV = "F:\BW_ECHO_EXPERIMENT\";
+WavFileList = dir(fullfile(PATH2WAV,'**\*.wav'));
 bandpass_width = 5000;
 ping_window = 2048;
 %%%%%%%
 
 %load validated pings
-load('ALL_SITES_PINGS.mat')
+load('F:\BW_ECHO_EXPERIMENT\ALL_SITES_PINGS.mat')
 
 %load hydrophone values
-AMARINPUT = readtable("C:\Users\Adamsmi\Documents\MATLAB\GITHUB\ECHO_DETECTOR\INPUT\AMAR_INPUT.csv");
+AMARINPUT = readtable("F:\BW_ECHO_EXPERIMENT\AMAR_INPUT.csv");
 
 %HydrophoneSensitivity = -165.42; %C00044
-HydrophoneSensitivity = -165.42; %D000893
+%HydrophoneSensitivity = -165.42; %D000893
 %HydrophoneSensitivity = -164.271; %F00099
 
 %%% create empty variable to store bandpass filter object
 bandpass_filter = [];
 filterFreq = [];
 
-for p = 1:height(Validated_ranges) % loop through pings
-    ping_index = Validated_ranges.adjusted_ping_loc(p); % get index of ping peak
-    file = char(fullfile(PATH2WAV,Validated_ranges.WavFiles(p))); % get wav file 
-    ainfo = audioinfo(file);
+for p = 1:height(ALL_SITES_PINGS) % loop through pings
+    ping_index = ALL_SITES_PINGS.adjusted_ping_loc(p); % get index of ping peak
+    file = ALL_SITES_PINGS.WavFiles(p); % get wav file
+    Site = ALL_SITES_PINGS.SITE(p,:);
+    AMAR = AMARINPUT.AMAR(string(AMARINPUT.SITE) == string(Site));
+    HSens = AMARINPUT.HydroSens(string(AMARINPUT.SITE) == string(Site));
+    Gain = AMARINPUT.Gain(string(AMARINPUT.SITE) == string(Site));
+    GainV = AMARINPUT.V(string(AMARINPUT.SITE) == string(Site));
+    file_index = WavFileList(find(strcmp(char(WavFileList.name), file )),:);
+    filePATH = fullfile(file_index(1).folder,file_index(1).name);
+    ainfo = audioinfo(filePATH);
     window_start = ping_index - ping_window; % define window to extract ping
     if window_start <= 0
         window_start = 1;
@@ -34,14 +42,14 @@ for p = 1:height(Validated_ranges) % loop through pings
     if window_stop > ainfo.TotalSamples
         window_stop = ainfo.TotalSamples;
     end
-    [x,Fs] = audioread(file,[window_start,window_stop-1],'native'); %read in just ping in native
+    [x,Fs] = audioread(filePATH,[window_start,window_stop-1],'native'); %read in just ping in native
     x = double(x(:,1)); %still don't understand this one...
     x1=x/256; %or this one...
     [M,q] = size(x1); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
     
-    freq = double(Validated_ranges.freq(p)); % get frequency of detected ping
+    freq = double(ALL_SITES_PINGS.freq(p)); % get frequency of detected ping
     %define bandpass filter
     LowerStopbandFrequency = freq - bandpass_width-1000;
     LowerPassbandFrequency = freq - bandpass_width;
@@ -87,18 +95,20 @@ for p = 1:height(Validated_ranges) % loop through pings
     avepow = @(x) sum((x.^2),1)./size(x,1); % equation for calculating RMS-based average power for each channel
     pSigWin = avepow(xSub);
     pNoiseWin = avepow(noise);
-    Validated_ranges.snr_dB(p) = 10*log10(pSigWin./pNoiseWin);
-    Validated_ranges.snr_adjusted_dB(p) = 10*log10((pSigWin - pNoiseWin)./pNoiseWin);
+    ALL_SITES_PINGS.snr_dB(p) = 10*log10(pSigWin./pNoiseWin);
+    ALL_SITES_PINGS.snr_adjusted_dB(p) = 10*log10((pSigWin - pNoiseWin)./pNoiseWin);
     
     xMax = max(xSub);
     xMin = min(xSub);
     ppCount = xMax - xMin; %get peak to peak in AMAR counts
-    Validated_ranges.ppCount(p) = ppCount;
+    ALL_SITES_PINGS.ppCount(p) = ppCount;
     
-    Validated_ranges_p = (ppCount*(9/2^24))/(5*(10^(HydrophoneSensitivity/20))); %convert counts to pressure
+   ALL_SITES_PINGS_p = (ppCount*(9/2^24))/(GainV*(10^(HSens/20))); %convert counts to pressure
  
     
     % convert to dB
-    Validated_ranges.ppSignal(p) = 20*log10(Validated_ranges_p); %convert pressure to dB
+    ALL_SITES_PINGS.ppSignal(p) = 20*log10(ALL_SITES_PINGS_p); %convert pressure to dB
            
 end    
+
+save(fullfile(PATH2WAV,'ALL_SITES_PINGS_SPL.mat'), "ALL_SITES_PINGS")

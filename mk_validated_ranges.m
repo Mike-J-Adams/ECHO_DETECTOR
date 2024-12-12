@@ -9,7 +9,7 @@ fs = 256000;
 
 
 %Load validated pings
-load("F:\BW_ECHO_EXPERIMENT\FCH_2020_09\FCH_EK60_VALIDATED_ALL.mat");
+load("F:\BW_ECHO_EXPERIMENT\COC_2020_09\COC_EK60_VALIDATED_ALL.mat");
 validated = VALIDATED_PINGS(VALIDATED_PINGS.validated == 1,:);
 
 %group by minute
@@ -25,7 +25,7 @@ subplot(2,1,1)
 histogram(validated.validation_time_min,'BinWidth',minutes(1))
 xlim([min(validated.validation_time_min),max(validated.validation_time_min)])
 
-Freq_filter = 70000;
+Freq_filter = 18000;
 
 validated_freq = validated(str2double(validated.freq) == Freq_filter,:);
 subplot(2,1,2)
@@ -60,7 +60,7 @@ clear opts
 
 %combine pings and ranges
 Validated_ranges = join(validated,ALLBIGELOWGPSRANGES,'LeftKeys',18,'RightKeys',1);
-save('FCH_EK60_VALIDATED_RANGES.mat','Validated_ranges')
+save('COC_EK60_VALIDATED_RANGES.mat','Validated_ranges')
 
 Freq_ranges = Validated_ranges(str2double(Validated_ranges.freq) == Freq_filter,:); 
 figure(2) 

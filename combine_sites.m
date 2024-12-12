@@ -15,7 +15,6 @@ PING.GBK = load("F:\BW_ECHO_EXPERIMENT\GBK_2020_09\GBK_EK60_VALIDATED_RANGES.mat
 PING.FCH = load("F:\BW_ECHO_EXPERIMENT\FCH_2020_09\FCH_EK60_VALIDATED_RANGES.mat");
 
 PING_COC = PING.COC.Validated_ranges;
-PING_COC = removevars(PING_COC, {'snr_dB','snr_adjusted_dB','ppCount','ppSignal'});
 PING_GBK = PING.GBK.Validated_ranges;
 PING_FCH = PING.FCH.Validated_ranges;
 
@@ -38,6 +37,7 @@ ALL_SITES_PINGS = [PING_COC;PING_GBK;PING_FCH];
 ALL_SITES_PINGS = removevars(ALL_SITES_PINGS,{'COC_SLANT_RANGE','FCH_SLANT_RANGE','GBK_SLANT_RANGE','COCranges','FCHranges','GBKranges'});
 
 save('ALL_SITES_PINGS.mat','ALL_SITES_PINGS')
+
 
 
 
