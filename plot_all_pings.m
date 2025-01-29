@@ -4,7 +4,7 @@ clear
 close all
 
 %load pings
-load("F:\BW_ECHO_EXPERIMENT\ALL_SITES_PINGS_SPL_checked.mat");
+load("F:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS_SPL_checked.mat");
 
 pings = ALL_SITES_PINGS_filtered_checked;
 

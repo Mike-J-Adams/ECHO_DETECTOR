@@ -6,7 +6,9 @@ clear
 close all
 
 %load pings
-load("F:\BW_ECHO_EXPERIMENT\ALL_SITES_PINGS_SPL.mat")
+%load("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS_SPL.mat") %initial pass
+load("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS_SPL_checked.mat") % check 
+ALL_SITES_PINGS = ALL_SITES_PINGS_filtered_checked; %check
 
 %filter validations
 % range

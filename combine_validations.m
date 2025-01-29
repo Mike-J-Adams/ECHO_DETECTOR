@@ -6,7 +6,7 @@ close all
 import('utilities.readDateTime');
 
 %set path to data
-PATH2VALIDATIONS = 'F:\BW_ECHO_EXPERIMENT\FCH_2020_09\';
+PATH2VALIDATIONS = 'D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\FCH_2020_09';
 
 files = '*_VALIDATED.mat';
 VALIDATEDList = dir(fullfile(PATH2VALIDATIONS,files));

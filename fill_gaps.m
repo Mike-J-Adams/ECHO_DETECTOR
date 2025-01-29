@@ -18,12 +18,13 @@ bandpass_width = 5000;  % +- width of bandpass filter
 freq = 18000;
 %%%
 
-PATH2OUTPUT = 'F:\BW_ECHO_EXPERIMENT\GBK_2020_09';
-PATH2DETECTIONS = 'F:\BW_ECHO_EXPERIMENT\GBK_2020_09\GBK_EK60_DETECTIONS_FILTERED_18kHz_VALIDATED.mat';
-PATH2DATA = 'F:\BW_ECHO_EXPERIMENT\GBK_2020_09\3DaySubset';
-PATH2ADDEDPINGS = 'F:\BW_ECHO_EXPERIMENT\GBK_2020_09\ADDED18kHz_PINGS';
+PATH2OUTPUT = 'F:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\COC_2020_09';
+PATH2DETECTIONS = 'F:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\COC_2020_09\GBK_EK60_DETECTIONS_FILTERED_120kHz_VALIDATED.mat';
+PATH2DATA = 'F:\BW_ECHO_EXPERIMENT\WAV_FILES\COC_2020_09\3DAYSUBSET';
+PATH2ADDEDPINGS = 'F:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\COC_2020_09\ADDED_18kHz_PINGS.mat';
 load(PATH2DETECTIONS);
-
+%filter out already validated detections
+Filtered_peaks_wav_reviewed = Filtered_peaks_wav_reviewed(Filtered_peaks_wav_reviewed.validated == 1,:);
 
 if isfile(PATH2ADDEDPINGS)
    load(PATH2ADDEDPINGS); 
@@ -232,11 +233,11 @@ for d = 5:length(unique_wav) %detection loop
           else
               validated = 0;
           end
-        temp_new_pings = [file new_ping_loc_plot validated];
+        temp_new_pings = [file new_ping_loc_plot validated freq];
         new_pings = [new_pings;temp_new_pings];
        end
-       
-       output_file = char(fullfile(PATH2OUTPUT,['ADDED',num2str(freq/1000),'kHz_PINGS']));
+       new_pings = new_pings(str2double(new_pings(:,3))==1,:);
+       output_file = char(fullfile(PATH2OUTPUT,['ADDED_',num2str(freq/1000),'kHz_PINGS']));
        save(output_file,'new_pings')
        
    end  

@@ -3,17 +3,17 @@
 clear
 close all
 %%%%%%%
-PATH2WAV = "F:\BW_ECHO_EXPERIMENT\";
+PATH2WAV = "D:\BW_ECHO_EXPERIMENT\WAV_FILES\";
 WavFileList = dir(fullfile(PATH2WAV,'**\*.wav'));
 bandpass_width = 5000;
 ping_window = 2048;
 %%%%%%%
 
 %load validated pings
-load('F:\BW_ECHO_EXPERIMENT\ALL_SITES_PINGS.mat')
+load("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS.mat")
 
 %load hydrophone values
-AMARINPUT = readtable("F:\BW_ECHO_EXPERIMENT\AMAR_INPUT.csv");
+AMARINPUT = readtable("D:\BW_ECHO_EXPERIMENT\MAPPING_INPUT\AMAR_INPUT.csv");
 
 %HydrophoneSensitivity = -165.42; %C00044
 %HydrophoneSensitivity = -165.42; %D000893
@@ -111,4 +111,4 @@ for p = 1:height(ALL_SITES_PINGS) % loop through pings
            
 end    
 
-save(fullfile(PATH2WAV,'ALL_SITES_PINGS_SPL.mat'), "ALL_SITES_PINGS")
+save("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS_SPL.mat", "ALL_SITES_PINGS")

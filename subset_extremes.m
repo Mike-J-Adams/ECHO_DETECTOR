@@ -6,14 +6,14 @@ clear
 close all
 
 %%%%%%%
-PATH2WAV = "F:\BW_ECHO_EXPERIMENT\";
+PATH2WAV = "D:\BW_ECHO_EXPERIMENT\WAV_FILES\";
 WavFileList = dir(fullfile(PATH2WAV,'**\*.wav'));
 bandpass_width = 5000;
 ping_window = 2048;
 %%%%%%%
 
 %load subsetted pings
-load("F:\BW_ECHO_EXPERIMENT\ALL_SITES_PINGS_SPL_filtered.mat")
+load("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS_SPL_filtered.mat")
 
 %only look at PINGS over 5000m
 Far_PINGS = ALL_SITES_PINGS_filtered(ALL_SITES_PINGS_filtered.slantRange >= 5000,:);

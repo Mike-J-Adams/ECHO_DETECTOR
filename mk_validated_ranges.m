@@ -9,7 +9,7 @@ fs = 256000;
 
 
 %Load validated pings
-load("F:\BW_ECHO_EXPERIMENT\COC_2020_09\COC_EK60_VALIDATED_ALL.mat");
+load("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\FCH_2020_09\FCH_EK60_VALIDATED_ALL.mat");
 validated = VALIDATED_PINGS(VALIDATED_PINGS.validated == 1,:);
 
 %group by minute
@@ -33,34 +33,34 @@ histogram(validated_freq.validation_time_min,'BinWidth',minutes(1))
 xlim([min(validated.validation_time_min),max(validated.validation_time_min)])
 
 % import GPS_min
-%% Setup the Import Options and import the data
-opts = delimitedTextImportOptions("NumVariables", 9);
+%% Set up the Import Options and import the data
+opts = delimitedTextImportOptions("NumVariables", 10);
 
 % Specify range and delimiter
 opts.DataLines = [2, Inf];
 opts.Delimiter = ",";
 
 % Specify column names and types
-opts.VariableNames = ["datetime_1min", "Latitude", "Longitude", "COCranges", "GBKranges", "FCHranges", "COC_SLANT_RANGE", "GBK_SLANT_RANGE", "FCH_SLANT_RANGE"];
-opts.VariableTypes = ["datetime", "double", "double", "double", "double", "double", "double", "double", "double"];
+opts.VariableNames = ["VarName1", "datetime_1min", "Latitude", "Longitude", "COCranges", "GBKranges", "FCHranges", "COC_SLANT_RANGE", "GBK_SLANT_RANGE", "FCH_SLANT_RANGE"];
+opts.VariableTypes = ["double", "datetime", "double", "double", "double", "double", "double", "double", "double", "double"];
 
 % Specify file level properties
 opts.ExtraColumnsRule = "ignore";
 opts.EmptyLineRule = "read";
 
 % Specify variable properties
-opts = setvaropts(opts, "datetime_1min", "InputFormat", "yyyy-MM-dd HH:mm:ss");
+opts = setvaropts(opts, "datetime_1min", "InputFormat", "yyyy-MM-dd HH:mm:ss", "DatetimeFormat", "preserveinput");
 
 % Import the data
-ALLBIGELOWGPSRANGES = readtable("C:\Users\Adamsmi\Documents\MATLAB\BW_ECHO_EXPERIMENT\ALL_BIGELOW_GPS_RANGES.csv", opts);
+ALLBIGELOWGPSRANGES1 = readtable("D:\BW_ECHO_EXPERIMENT\MAPPING_OUTPUT\ALL_BIGELOW_GPS_RANGES.csv", opts);
 
 
 % Clear temporary variables
 clear opts
 
 %combine pings and ranges
-Validated_ranges = join(validated,ALLBIGELOWGPSRANGES,'LeftKeys',18,'RightKeys',1);
-save('COC_EK60_VALIDATED_RANGES.mat','Validated_ranges')
+Validated_ranges = join(validated,ALLBIGELOWGPSRANGES1,'LeftKeys',18,'RightKeys',2);
+save("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\FCH_2020_09\FCH_EK60_VALIDATED_RANGES.mat",'Validated_ranges')
 
 Freq_ranges = Validated_ranges(str2double(Validated_ranges.freq) == Freq_filter,:); 
 figure(2) 

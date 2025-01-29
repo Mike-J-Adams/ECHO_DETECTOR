@@ -20,17 +20,17 @@ Ping_Duration = [0.001 0.0025];
 %%% Change to filter to Datetime Range
 %FilterDateTime = datetime(['2021/08/04 03:48'; '2021/08/04 09:07'],'Format','yyyy/MM/dd HH:mm'); %COC
 %FilterDateTime = datetime(['2021/08/04 08:22'; '2021/08/04 14:17'],'Format','yyyy/MM/dd HH:mm'); %GBK
-FilterDateTime = datetime(['2021/08/04 19:28'; '2021/08/05 01:02'],'Format','yyyy/MM/dd HH:mm'); %FCH
+FilterDateTime = datetime(['2021/08/04 19:28'; '2021/08/05 02:02'],'Format','yyyy/MM/dd HH:mm'); %FCH
 %%%
 
 %%% Change to review single frequency, leave empty to review all
-freq = 120000;
+freq = 18000;
 %%%
 
-PATH2OUTPUT = 'F:\BW_ECHO_EXPERIMENT\FCH_2020_09';
-output_name = 'FCH_EK60_DETECTIONS_FILTERED_120kHz_VALIDATED.mat'; %
-PATH2DETECTIONS = 'F:\BW_ECHO_EXPERIMENT\FCH_2020_09\FCH_EK60_DETECTIONS_ALL.mat';
-PATH2DATA = 'F:\BW_ECHO_EXPERIMENT\FCH_2020_09\3DaySubset';
+PATH2OUTPUT = 'D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT';
+output_name = 'extended_FCH_EK60_DETECTIONS_FILTERED_18kHz_VALIDATED.mat'; %
+PATH2DETECTIONS = 'D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\FCH_2020_09\FCH_EK60_DETECTIONS_ALL.mat';
+PATH2DATA = 'D:\BW_ECHO_EXPERIMENT\WAV_FILES\FCH_2020_09\3DAYSUBSET';
 load(PATH2DETECTIONS);
 
 if isfile(fullfile(PATH2OUTPUT,output_name))
@@ -60,7 +60,7 @@ else
     f = find(unique_wav == last_file);
 end
 
-for d = f:length(unique_wav) %detection loop
+for d = 11:length(unique_wav) %detection loop
     file = unique_wav(d);
     dt_start = readDateTime(char((unique_wav(d)))); %start time of file, read in from filename
     PATH2WAV = fullfile(PATH2DATA,char((unique_wav(d))));
