@@ -23,10 +23,13 @@ AMARINPUT = readtable("D:\BW_ECHO_EXPERIMENT\MAPPING_INPUT\AMAR_INPUT.csv");
 bandpass_filter = [];
 filterFreq = [];
 
+ALL_SITES_PINGS = table2struct(ALL_SITES_PINGS);
+
 for p = 1:height(ALL_SITES_PINGS) % loop through pings
-    ping_index = ALL_SITES_PINGS.adjusted_ping_loc(p); % get index of ping peak
-    file = ALL_SITES_PINGS.WavFiles(p); % get wav file
-    Site = ALL_SITES_PINGS.SITE(p,:);
+%for p = 1:2
+    ping_index = ALL_SITES_PINGS(p).adjusted_ping_loc; % get index of ping peak
+    file = ALL_SITES_PINGS(p).WavFiles; % get wav file
+    Site = ALL_SITES_PINGS(p).SITE;
     AMAR = AMARINPUT.AMAR(string(AMARINPUT.SITE) == string(Site));
     HSens = AMARINPUT.HydroSens(string(AMARINPUT.SITE) == string(Site));
     Gain = AMARINPUT.Gain(string(AMARINPUT.SITE) == string(Site));
@@ -48,8 +51,12 @@ for p = 1:height(ALL_SITES_PINGS) % loop through pings
     [M,q] = size(x1); %get size length of audio
     dt = 1/Fs;      %time between samples in seconds
     t = dt*(0:M-1)';%get time index in seconds
+   
     
-    freq = double(ALL_SITES_PINGS.freq(p)); % get frequency of detected ping
+    [Mv,Mi] = max(abs(x1));
+  
+    
+    freq = double(ALL_SITES_PINGS(p).freq); % get frequency of detected ping
     %define bandpass filter
     LowerStopbandFrequency = freq - bandpass_width-1000;
     LowerPassbandFrequency = freq - bandpass_width;
@@ -74,19 +81,28 @@ for p = 1:height(ALL_SITES_PINGS) % loop through pings
    trim = 256;
    x_freq_trimmed = x_freq(trim:length(x_freq)-trim); %tring away buffer
    
-   figure(1)
-   subplot(2,1,1)
-   plot(x1)
-   subplot(2,1,2)
-   plot(x_freq_trimmed)
+   %figure(1)
+   %subplot(2,1,1)
+   %plot(x1)
+   %subplot(2,1,2)
+   %plot(x_freq_trimmed)
    
    noise = x_freq_trimmed(1:512); %select out noise
    
    [Start90, Stop90] = utilities.calcEng(x_freq_trimmed, 90); %mark 90% energy 
-   hold on
-   xline(Start90,'r')
-   xline(Stop90,'r')
-   hold off
+   %hold on
+   %xline(Start90,'r')
+   %xline(Stop90,'r')
+   %hold off
+
+   %[px1,f1] = pwelch(x1,256,128,256,Fs);
+   %[px2,f2] = pwelch(x_freq_trimmed,256,128,256,Fs);
+
+   %figure(2)
+    %subplot(2,1,1)
+    %plot(f1,pow2db(px1))
+    %subplot(2,1,2)
+    %plot(f2,pow2db(px2))
    
     % get min and max magnitudes
     xSub = x_freq_trimmed(Start90:Stop90);
@@ -95,20 +111,36 @@ for p = 1:height(ALL_SITES_PINGS) % loop through pings
     avepow = @(x) sum((x.^2),1)./size(x,1); % equation for calculating RMS-based average power for each channel
     pSigWin = avepow(xSub);
     pNoiseWin = avepow(noise);
-    ALL_SITES_PINGS.snr_dB(p) = 10*log10(pSigWin./pNoiseWin);
-    ALL_SITES_PINGS.snr_adjusted_dB(p) = 10*log10((pSigWin - pNoiseWin)./pNoiseWin);
+    ALL_SITES_PINGS(p).snr_dB = 10*log10(pSigWin./pNoiseWin);
+    ALL_SITES_PINGS(p).snr_adjusted_dB = 10*log10((pSigWin - pNoiseWin)./pNoiseWin);
     
     xMax = max(xSub);
     xMin = min(xSub);
     ppCount = xMax - xMin; %get peak to peak in AMAR counts
-    ALL_SITES_PINGS.ppCount(p) = ppCount;
+    ALL_SITES_PINGS(p).ppCount = ppCount;
     
    ALL_SITES_PINGS_p = (ppCount*(9/2^24))/(GainV*(10^(HSens/20))); %convert counts to pressure
  
     
     % convert to dB
-    ALL_SITES_PINGS.ppSignal(p) = 20*log10(ALL_SITES_PINGS_p); %convert pressure to dB
-           
+    ALL_SITES_PINGS(p).ppSignal = 20*log10(ALL_SITES_PINGS_p); %convert pressure to dB
+    
+    %get ping fixed window
+    if Mi-256 <= 0 || Mi+256 > length(x1)
+        continue
+    end
+    x_256 = x1(Mi-256:Mi+256-1);
+    figure(3)
+    subplot(2,1,1)
+    plot(x_256)
+    [px3,f3] = pwelch(x_256,256,128,256,Fs);
+    subplot(2,1,2)
+    plot(f3,pow2db(px3))
+
+    
+    ALL_SITES_PINGS(p).PSD = px3;
+    ALL_SITES_PINGS(p).PSDF = f3;
+    %pause()
 end    
 
-save("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS_SPL.mat", "ALL_SITES_PINGS")
+%save("D:\BW_ECHO_EXPERIMENT\DETECTOR_OUTPUT\ALL_SITES\ALL_SITES_PINGS_SPL.mat", "ALL_SITES_PINGS")
